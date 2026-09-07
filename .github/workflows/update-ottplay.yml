@@ -1,0 +1,111 @@
+name: Update OTT-play Homebrew Manifest
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get LG webOS release
+        id: release
+        run: |
+          RELEASE=$(curl -fsSL \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/prog4food/ottplay-foss-thin-clients/releases/tags/lg-webos-release")
+
+          IPK_URL=$(echo "$RELEASE" | jq -r \
+            '.assets[] | select(.name | endswith(".ipk")) | .browser_download_url' | head -n 1)
+
+          IPK_NAME=$(echo "$RELEASE" | jq -r \
+            '.assets[] | select(.name | endswith(".ipk")) | .name' | head -n 1)
+
+          if [ -z "$IPK_URL" ] || [ "$IPK_URL" = "null" ]; then
+            echo "No LG webOS IPK found."
+            exit 1
+          fi
+
+          echo "Found: $IPK_NAME"
+          echo "URL: $IPK_URL"
+
+          echo "ipk_url=$IPK_URL" >> "$GITHUB_OUTPUT"
+          echo "ipk_name=$IPK_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Extract version from IPK filename
+        id: version
+        env:
+          IPK_NAME: ${{ steps.release.outputs.ipk_name }}
+        run: |
+          VERSION=$(echo "$IPK_NAME" | grep -oP 'v\K[0-9]+(\.[0-9]+)+')
+
+          if [ -z "$VERSION" ]; then
+            echo "Could not detect version from: $IPK_NAME"
+            exit 1
+          fi
+
+          echo "Detected version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download IPK
+        env:
+          IPK_URL: ${{ steps.release.outputs.ipk_url }}
+        run: |
+          curl -fL "$IPK_URL" -o latest.ipk
+
+      - name: Calculate SHA256 and size
+        id: ipk
+        run: |
+          SHA256=$(sha256sum latest.ipk | awk '{print $1}')
+          SIZE=$(stat -c%s latest.ipk)
+
+          echo "SHA256: $SHA256"
+          echo "Size: $SIZE"
+
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+
+      - name: Update manifest.json
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          IPK_URL: ${{ steps.release.outputs.ipk_url }}
+          SHA256: ${{ steps.ipk.outputs.sha256 }}
+          SIZE: ${{ steps.ipk.outputs.size }}
+        run: |
+          cat > manifest.json <<EOF
+          {
+            "id": "com.ottplay-foss",
+            "title": "OTT-play FOSS",
+            "version": "$VERSION",
+            "appDescription": "OTT-play FOSS client for LG webOS.",
+            "sourceUrl": "https://github.com/prog4food/ottplay-foss-thin-clients",
+            "rootRequired": false,
+            "ipkUrl": "$IPK_URL",
+            "ipkHash": {
+              "sha256": "$SHA256"
+            },
+            "ipkSize": $SIZE
+          }
+          EOF
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add manifest.json
+
+          if git diff --cached --quiet; then
+            echo "Already up to date."
+          else
+            git commit -m "Update OTT-play Homebrew manifest"
+            git push
+          fi
