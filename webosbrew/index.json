@@ -1,0 +1,17 @@
+{
+  "paging": {
+    "page": 1,
+    "count": 1,
+    "maxPage": 1,
+    "itemsTotal": 1
+  },
+  "packages": [
+    {
+      "id": "com.ottplay-foss",
+      "title": "OTT-play FOSS",
+      "manifestUrl": "https://raw.githubusercontent.com/kadhimomar1/ottplay-foss-thin-clients-repo/main/manifest.json",
+      "pool": "main",
+      "shortDescription": "OTT-play FOSS client for LG webOS."
+    }
+  ]
+}
