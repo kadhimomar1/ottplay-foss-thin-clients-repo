@@ -7,7 +7,7 @@
   "rootRequired": false,
   "ipkUrl": "https://github.com/prog4food/ottplay-foss-thin-clients/releases/download/lg-webos-release/com.ottplay-foss_lg_webos_v0.1.6.ipk",
   "ipkHash": {
-    "sha256": "AUTO"
+    "sha256": "14f8bf138222d628b5145ba4a1a446a8142f2192d867cfdb0c2a117b6f96af02"
   },
   "ipkSize": 110424
 }
