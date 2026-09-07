@@ -1,0 +1,13 @@
+{
+  "id": "com.ottplay-foss",
+  "title": "OTT-play FOSS",
+  "version": "0.1.6",
+  "appDescription": "OTT-play FOSS client for LG webOS.",
+  "sourceUrl": "https://github.com/prog4food/ottplay-foss-thin-clients",
+  "rootRequired": false,
+  "ipkUrl": "https://github.com/prog4food/ottplay-foss-thin-clients/releases/download/lg-webos-release/com.ottplay-foss_lg_webos_v0.1.6.ipk",
+  "ipkHash": {
+    "sha256": "AUTO"
+  },
+  "ipkSize": 110424
+}
